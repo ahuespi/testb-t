@@ -50,7 +50,8 @@ export const EditTransactionModal = ({
   
   const [stake, setStake] = useState(getOriginalStakeValue());
 
-  const isPending = transaction.type === TransactionType.BET_PENDING;
+  const isPending = type === TransactionType.BET_PENDING;
+  const wasPending = transaction.type === TransactionType.BET_PENDING;
   const isBettingTransaction = [
     TransactionType.BET_PENDING,
     TransactionType.BET_LOST,
@@ -63,7 +64,7 @@ export const EditTransactionModal = ({
     type === TransactionType.BET_PENDING || type === TransactionType.BET_LOST
       ? stake
       : type === TransactionType.BET_WON || type === TransactionType.BET_CASHOUT
-      ? stake + transaction.net_profit // Para ganadas/cashout, mantener el net_profit original
+      ? amount // Para ganadas/cashout, usar el amount editado
       : amount;
   
   // Calcular net_profit basado en el tipo y stake
@@ -97,24 +98,38 @@ export const EditTransactionModal = ({
         updates.type = type;
       }
 
-      // Si el stake cambió, recalcular amount y net_profit
-      const currentStake = stake;
-      const originalStakeValue = getOriginalStakeValue();
-      
-      if (currentStake !== originalStakeValue) {
-        // El stake cambió, recalcular amount según el tipo
-        if (type === TransactionType.BET_PENDING || type === TransactionType.BET_LOST) {
-          // Para pendientes/perdidas: amount = stake
-          updates.amount = currentStake;
+      // Si el tipo cambió, recalcular amount y net_profit según el nuevo tipo
+      if (type !== transaction.type) {
+        if (type === TransactionType.BET_PENDING) {
+          // Cambiar a pendiente: amount = stake, net_profit = -stake
+          updates.amount = stake;
+        } else if (type === TransactionType.BET_LOST) {
+          // Cambiar a perdida: amount = stake, net_profit = -stake
+          updates.amount = stake;
         } else if (type === TransactionType.BET_WON || type === TransactionType.BET_CASHOUT) {
-          // Para ganadas/cashout: mantener el net_profit y ajustar amount
-          // nuevo amount = nuevo stake + net_profit original
-          const originalNetProfit = transaction.net_profit;
-          updates.amount = currentStake + originalNetProfit;
+          // Cambiar a ganada/cashout: usar el amount editado
+          updates.amount = amount;
         }
-      } else if (amount !== transaction.amount) {
-        // Solo cambió el amount, no el stake
-        updates.amount = amount;
+      } else {
+        // El tipo no cambió, verificar si cambió el stake o el amount
+        const currentStake = stake;
+        const originalStakeValue = getOriginalStakeValue();
+        
+        if (currentStake !== originalStakeValue) {
+          // El stake cambió, recalcular amount según el tipo
+          if (type === TransactionType.BET_PENDING || type === TransactionType.BET_LOST) {
+            // Para pendientes/perdidas: amount = stake
+            updates.amount = currentStake;
+          } else if (type === TransactionType.BET_WON || type === TransactionType.BET_CASHOUT) {
+            // Para ganadas/cashout: mantener el net_profit y ajustar amount
+            // nuevo amount = nuevo stake + net_profit actual
+            const currentNetProfit = transaction.net_profit;
+            updates.amount = currentStake + currentNetProfit;
+          }
+        } else if (amount !== transaction.amount && (type === TransactionType.BET_WON || type === TransactionType.BET_CASHOUT)) {
+          // Solo cambió el amount para ganadas/cashout
+          updates.amount = amount;
+        }
       }
 
       const currentDatePart = getDatePart(transaction.date);
@@ -147,11 +162,9 @@ export const EditTransactionModal = ({
     }
   };
 
-  const canEdit =
-    isPending ||
-    transaction.type === TransactionType.BET_WON ||
-    transaction.type === TransactionType.BET_CASHOUT ||
-    transaction.type === TransactionType.BET_LOST;
+  // Permitir editar todas las apuestas (pendientes, ganadas, perdidas, cashout)
+  // No permitir editar depósitos/retiros
+  const canEdit = isBettingTransaction;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -159,7 +172,7 @@ export const EditTransactionModal = ({
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-2xl font-bold text-gray-800">
-              {isPending ? "Resolver Apuesta" : "Editar Transacción"}
+              {wasPending && !isPending ? "Editar Transacción" : isPending ? "Resolver Apuesta" : "Editar Transacción"}
             </h2>
             <button
               onClick={onClose}
@@ -298,20 +311,40 @@ export const EditTransactionModal = ({
                 </div>
               )}
 
-              {/* Selector de Resultado (solo si es pendiente) */}
-              {isPending && (
+              {/* Selector de Estado (para todas las apuestas) */}
+              {isBettingTransaction && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    ¿Cuál fue el resultado?
+                    Estado de la Apuesta
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-4 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setType(TransactionType.BET_PENDING);
+                        setAmount(stake);
+                      }}
+                      className={`px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                        type === TransactionType.BET_PENDING
+                          ? "bg-yellow-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      ⏳ Pendiente
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
                         setType(TransactionType.BET_WON);
-                        setAmount(expectedPayout);
+                        // Si estaba pendiente o perdida, usar el pago esperado
+                        if (transaction.type === TransactionType.BET_PENDING || transaction.type === TransactionType.BET_LOST) {
+                          setAmount(expectedPayout);
+                        } else {
+                          // Mantener el amount actual si ya estaba ganada
+                          setAmount(amount);
+                        }
                       }}
-                      className={`px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                      className={`px-3 py-2 rounded-md text-xs font-medium transition-colors ${
                         type === TransactionType.BET_WON
                           ? "bg-green-600 text-white"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -325,7 +358,7 @@ export const EditTransactionModal = ({
                         setType(TransactionType.BET_LOST);
                         setAmount(stake);
                       }}
-                      className={`px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                      className={`px-3 py-2 rounded-md text-xs font-medium transition-colors ${
                         type === TransactionType.BET_LOST
                           ? "bg-red-600 text-white"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -337,9 +370,15 @@ export const EditTransactionModal = ({
                       type="button"
                       onClick={() => {
                         setType(TransactionType.BET_CASHOUT);
-                        setAmount(stake * 0.8); // Ejemplo: 80% del stake
+                        // Si estaba pendiente o perdida, usar un estimado
+                        if (transaction.type === TransactionType.BET_PENDING || transaction.type === TransactionType.BET_LOST) {
+                          setAmount(stake * 0.8); // Ejemplo: 80% del stake
+                        } else {
+                          // Mantener el amount actual si ya estaba cashout
+                          setAmount(amount);
+                        }
                       }}
-                      className={`px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                      className={`px-3 py-2 rounded-md text-xs font-medium transition-colors ${
                         type === TransactionType.BET_CASHOUT
                           ? "bg-yellow-600 text-white"
                           : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -392,17 +431,20 @@ export const EditTransactionModal = ({
                     Vista previa del cambio:
                   </p>
                   <div className="space-y-1 text-sm">
-                    {isPending && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Estado:</span>
-                        <span className="font-medium">
-                          Pendiente →{" "}
-                          {type === TransactionType.BET_WON && "Ganada"}
-                          {type === TransactionType.BET_LOST && "Perdida"}
-                          {type === TransactionType.BET_CASHOUT && "Cashout"}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Estado:</span>
+                      <span className="font-medium">
+                        {transaction.type === TransactionType.BET_PENDING && "Pendiente"}
+                        {transaction.type === TransactionType.BET_WON && "Ganada"}
+                        {transaction.type === TransactionType.BET_LOST && "Perdida"}
+                        {transaction.type === TransactionType.BET_CASHOUT && "Cashout"}
+                        {" → "}
+                        {type === TransactionType.BET_PENDING && "Pendiente"}
+                        {type === TransactionType.BET_WON && "Ganada"}
+                        {type === TransactionType.BET_LOST && "Perdida"}
+                        {type === TransactionType.BET_CASHOUT && "Cashout"}
+                      </span>
+                    </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Beneficio original:</span>
                       <span
@@ -474,7 +516,7 @@ export const EditTransactionModal = ({
                 >
                   {isSubmitting
                     ? "Guardando..."
-                    : isPending
+                    : wasPending && !isPending
                     ? "Resolver"
                     : "Guardar"}
                 </button>

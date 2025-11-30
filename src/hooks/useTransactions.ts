@@ -134,10 +134,15 @@ export const useTransactions = () => {
 
       // Get the original stake (what was risked)
       // For pending bets, amount IS the stake
-      const originalStake =
+      let originalStake =
         transaction.type === TransactionType.BET_PENDING
           ? transaction.amount
           : transaction.amount - transaction.net_profit;
+
+      // If changing to pending or lost, and amount is provided, use it as the stake
+      if ((finalType === TransactionType.BET_PENDING || finalType === TransactionType.BET_LOST) && updates.amount !== undefined) {
+        originalStake = updates.amount;
+      }
 
       // Calculate net profit based on the final type
       if (finalType === TransactionType.BET_WON || finalType === TransactionType.BET_CASHOUT) {
@@ -147,6 +152,7 @@ export const useTransactions = () => {
         finalAmount = originalStake; // Lost bets amount = stake
       } else if (finalType === TransactionType.BET_PENDING) {
         netProfit = -originalStake; // Pending still shows as negative
+        finalAmount = originalStake; // Pending bets amount = stake
       }
 
       const updatedFields: any = {

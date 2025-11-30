@@ -97,8 +97,32 @@ export const TransactionHistory = ({
 
   // Calculate totals
   const totals = useMemo(() => {
+    const stakedAmount = filteredTransactions.reduce((sum, t) => {
+      const isBetting = [
+        TransactionType.BET_PENDING,
+        TransactionType.BET_LOST,
+        TransactionType.BET_WON,
+        TransactionType.BET_CASHOUT,
+      ].includes(t.type);
+      if (!isBetting) return sum;
+      // Para perdidas/pendientes, amount es el stake
+      if (t.type === TransactionType.BET_LOST || t.type === TransactionType.BET_PENDING) {
+        return sum + t.amount;
+      }
+      // Para ganadas/cashout, calcular el stake
+      return sum + (t.amount - t.net_profit);
+    }, 0);
+
+    const wonAmount = filteredTransactions.reduce((sum, t) => {
+      if (t.type === TransactionType.BET_WON || t.type === TransactionType.BET_CASHOUT) {
+        return sum + t.amount;
+      }
+      return sum;
+    }, 0);
+
     return {
-      amount: filteredTransactions.reduce((sum, t) => sum + t.amount, 0),
+      stakedAmount,
+      wonAmount,
       netProfit: filteredTransactions.reduce((sum, t) => sum + t.net_profit, 0),
     };
   }, [filteredTransactions]);
@@ -228,18 +252,73 @@ export const TransactionHistory = ({
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {transaction.stake ? `${transaction.stake}%` : "-"}
+                    {(() => {
+                      const isBetting = [
+                        TransactionType.BET_PENDING,
+                        TransactionType.BET_LOST,
+                        TransactionType.BET_WON,
+                        TransactionType.BET_CASHOUT,
+                      ].includes(transaction.type);
+                      if (!isBetting) return "-";
+                      return transaction.stake ? `${transaction.stake}%` : "-";
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-center text-gray-900">
-                    {transaction.odds ? transaction.odds.toFixed(2) : "-"}
+                    {(() => {
+                      const isBetting = [
+                        TransactionType.BET_PENDING,
+                        TransactionType.BET_LOST,
+                        TransactionType.BET_WON,
+                        TransactionType.BET_CASHOUT,
+                      ].includes(transaction.type);
+                      if (!isBetting) return "-";
+                      return transaction.odds ? transaction.odds.toFixed(2) : "-";
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-medium text-gray-900">
-                    {formatCurrency(transaction.amount)}
+                    {(() => {
+                      const isBetting = [
+                        TransactionType.BET_PENDING,
+                        TransactionType.BET_LOST,
+                        TransactionType.BET_WON,
+                        TransactionType.BET_CASHOUT,
+                      ].includes(transaction.type);
+                      if (!isBetting) {
+                        // Para depósitos/retiros, mostrar el amount
+                        return formatCurrency(transaction.amount);
+                      }
+                      // Para apuestas: Monto Apostado
+                      if (
+                        transaction.type === TransactionType.BET_LOST ||
+                        transaction.type === TransactionType.BET_PENDING
+                      ) {
+                        // Para perdidas/pendientes, amount es el stake
+                        return formatCurrency(transaction.amount);
+                      } else {
+                        // Para ganadas/cashout, calcular el stake
+                        const stake = transaction.amount - transaction.net_profit;
+                        return formatCurrency(stake);
+                      }
+                    })()}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600">
-                    {transaction.potential_profit
-                      ? formatCurrency(transaction.potential_profit)
-                      : "-"}
+                    {(() => {
+                      const isBetting = [
+                        TransactionType.BET_PENDING,
+                        TransactionType.BET_LOST,
+                        TransactionType.BET_WON,
+                        TransactionType.BET_CASHOUT,
+                      ].includes(transaction.type);
+                      if (!isBetting) return "-";
+                      // Monto Ganado: solo para ganadas/cashout
+                      if (
+                        transaction.type === TransactionType.BET_WON ||
+                        transaction.type === TransactionType.BET_CASHOUT
+                      ) {
+                        return formatCurrency(transaction.amount);
+                      }
+                      return "-";
+                    })()}
                   </td>
                   <td
                     className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${
@@ -280,18 +359,10 @@ export const TransactionHistory = ({
                   TOTALES
                 </td>
                 <td className="px-6 py-4 text-sm text-right text-gray-900">
-                  {formatCurrency(totals.amount)}
+                  {formatCurrency(totals.stakedAmount)}
                 </td>
                 <td className="px-6 py-4 text-sm text-right text-gray-900">
-                  {formatCurrency(
-                    filteredTransactions
-                      .filter(
-                        (t) =>
-                          t.type === TransactionType.BET_WON ||
-                          t.type === TransactionType.BET_CASHOUT
-                      )
-                      .reduce((sum, t) => sum + t.amount, 0)
-                  )}
+                  {formatCurrency(totals.wonAmount)}
                 </td>
                 <td
                   className={`px-6 py-4 text-sm text-right ${
@@ -427,8 +498,12 @@ export const TransactionHistory = ({
           <div className="p-4 bg-gray-50 font-semibold">
             <div className="text-sm space-y-1">
               <div className="flex justify-between">
-                <span>Total Monto:</span>
-                <span>{formatCurrency(totals.amount)}</span>
+                <span>Total Apostado:</span>
+                <span>{formatCurrency(totals.stakedAmount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Ganado:</span>
+                <span>{formatCurrency(totals.wonAmount)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Total Beneficio:</span>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Transaction, TransactionType, BetOwner } from "../types";
 import { formatCurrency } from "../lib/utils";
 
@@ -58,8 +58,6 @@ export const EditTransactionModal = ({
     TransactionType.BET_CASHOUT,
   ].includes(transaction.type);
 
-  const originalStakeValue = getOriginalStakeValue();
-  
   // Calcular amount basado en el stake y tipo actual
   const calculatedAmount = 
     type === TransactionType.BET_PENDING || type === TransactionType.BET_LOST

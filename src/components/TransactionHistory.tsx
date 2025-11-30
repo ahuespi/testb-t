@@ -163,6 +163,9 @@ export const TransactionHistory = ({
                   Tipo
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Propietario
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Stake
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -202,6 +205,27 @@ export const TransactionHistory = ({
                     >
                       {getTransactionTypeLabel(transaction.type)}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {transaction.owner ? (
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-medium rounded-md ${
+                          transaction.owner === "PROPIA"
+                            ? "bg-purple-100 text-purple-700"
+                            : transaction.owner === "PULPO"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {transaction.owner === "PROPIA"
+                          ? "Propia"
+                          : transaction.owner === "PULPO"
+                          ? "Pulpo"
+                          : "Trade"}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-gray-400">-</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {transaction.stake ? `${transaction.stake}%` : "-"}
@@ -295,6 +319,23 @@ export const TransactionHistory = ({
                   >
                     {getTransactionTypeLabel(transaction.type)}
                   </span>
+                  {transaction.owner && (
+                    <span
+                      className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-md ${
+                        transaction.owner === "PROPIA"
+                          ? "bg-purple-100 text-purple-700"
+                          : transaction.owner === "PULPO"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {transaction.owner === "PROPIA"
+                        ? "Propia"
+                        : transaction.owner === "PULPO"
+                        ? "Pulpo"
+                        : "Trade"}
+                    </span>
+                  )}
                   <p className="text-sm text-gray-500 mt-1">
                     {formatDate(transaction.date)}
                   </p>

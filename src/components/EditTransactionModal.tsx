@@ -60,15 +60,13 @@ export const EditTransactionModal = ({
 
   const originalStakeValue = getOriginalStakeValue();
   
-  // Si el stake cambió y es WON/CASHOUT, actualizar el amount automáticamente
-  const shouldUpdateAmount = 
-    (type === TransactionType.BET_WON || type === TransactionType.BET_CASHOUT) &&
-    stake !== originalStakeValue;
-  
-  // Calcular amount basado en el stake editado
-  const calculatedAmount = shouldUpdateAmount
-    ? stake + transaction.net_profit // Mantener el net_profit original
-    : amount;
+  // Calcular amount basado en el stake y tipo actual
+  const calculatedAmount = 
+    type === TransactionType.BET_PENDING || type === TransactionType.BET_LOST
+      ? stake
+      : type === TransactionType.BET_WON || type === TransactionType.BET_CASHOUT
+      ? stake + transaction.net_profit // Para ganadas/cashout, mantener el net_profit original
+      : amount;
   
   // Calcular net_profit basado en el tipo y stake
   const calculatedNetProfit = 
@@ -82,14 +80,6 @@ export const EditTransactionModal = ({
 
   // Calcular pago esperado si gana
   const expectedPayout = odds > 0 ? stake * odds : 0;
-  
-  // Actualizar amount cuando el stake cambia (para WON/CASHOUT)
-  useEffect(() => {
-    if (shouldUpdateAmount && (type === TransactionType.BET_WON || type === TransactionType.BET_CASHOUT)) {
-      const newAmount = stake + transaction.net_profit;
-      setAmount(newAmount);
-    }
-  }, [stake, type, transaction.net_profit]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

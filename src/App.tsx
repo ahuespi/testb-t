@@ -84,8 +84,8 @@ function App() {
         </div>
       </header>
 
-      {/* Navigation */}
-      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+      {/* Navigation - Desktop: Tabs horizontales */}
+      <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-8">
             <button
@@ -132,6 +132,103 @@ function App() {
         </div>
       </nav>
 
+      {/* Navigation - Mobile: Bottom tab bar con iconos */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 safe-area-bottom">
+        <div className="grid grid-cols-4 h-16">
+          <button
+            onClick={() => setCurrentView("dashboard")}
+            className={`flex flex-col items-center justify-center space-y-1 ${
+              currentView === "dashboard" ? "text-primary-600" : "text-gray-500"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+              />
+            </svg>
+            <span className="text-xs font-medium">Inicio</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView("add")}
+            className={`flex flex-col items-center justify-center space-y-1 ${
+              currentView === "add" ? "text-primary-600" : "text-gray-500"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            <span className="text-xs font-medium">Nueva</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView("history")}
+            className={`flex flex-col items-center justify-center space-y-1 ${
+              currentView === "history" ? "text-primary-600" : "text-gray-500"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-xs font-medium">Historial</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView("traders")}
+            className={`flex flex-col items-center justify-center space-y-1 ${
+              currentView === "traders" ? "text-primary-600" : "text-gray-500"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+            <span className="text-xs font-medium">Traders</span>
+          </button>
+        </div>
+      </nav>
+
       {/* Error Message */}
       {error && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
@@ -141,10 +238,13 @@ function App() {
         </div>
       )}
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content - con padding bottom para el tab bar mobile */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 md:pb-8">
         {currentView === "dashboard" && (
-          <Dashboard transactions={transactions} />
+          <Dashboard
+            transactions={transactions}
+            onUpdate={handleUpdateTransaction}
+          />
         )}
         {currentView === "add" && (
           <TransactionForm

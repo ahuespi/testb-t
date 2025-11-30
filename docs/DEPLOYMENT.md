@@ -61,7 +61,7 @@ Antes de comenzar, necesitas:
 1. Una vez que el proyecto esté listo, ve al menú lateral izquierdo
 2. Click en **"SQL Editor"** (ícono de terminal/código)
 3. Click en **"New query"** (botón verde arriba)
-4. Abre el archivo `supabase-schema.sql` de este proyecto en tu computadora
+4. Abre el archivo `sql/supabase-schema.sql` de este proyecto en tu computadora
 5. Copia **TODO** el contenido del archivo (Ctrl+A / Cmd+A, luego Ctrl+C / Cmd+C)
 6. Pega el contenido en el editor SQL de Supabase
 7. Click en **"Run"** (botón ▶️ o presiona Ctrl+Enter)
@@ -355,7 +355,7 @@ Verifica que todo funciona correctamente:
 
 **Solución**:
 1. Ve a Supabase > SQL Editor
-2. Ejecuta nuevamente el script `supabase-schema.sql`
+2. Ejecuta nuevamente el script `sql/supabase-schema.sql`
 3. Verifica que aparezca "Success"
 
 #### ❌ La aplicación no se instala en iPhone

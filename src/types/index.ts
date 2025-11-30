@@ -82,7 +82,7 @@ export interface TraderStats {
   avgOdds: number;
 }
 
-export type FilterPeriod = 'day' | 'week' | 'month' | 'year' | 'custom';
+export type FilterPeriod = 'day' | 'week' | 'month' | 'month-select' | 'year' | 'custom';
 
 export interface DateRange {
   start: string;

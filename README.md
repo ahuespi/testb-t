@@ -148,7 +148,7 @@ CREATE POLICY "Allow all operations on config" ON config
   WITH CHECK (true);
 ```
 
-**Nota**: Este script está en el archivo `supabase-schema.sql` del proyecto.
+**Nota**: Este script está en el archivo `sql/supabase-schema.sql` del proyecto.
 
 ### 3. Obtener Credenciales
 
@@ -389,7 +389,14 @@ betapp/
 │   ├── App.tsx           # Componente principal
 │   ├── main.tsx          # Entry point
 │   └── index.css         # Estilos globales
-├── supabase-schema.sql   # Script SQL para DB
+├── docs/                  # Documentación
+│   ├── DEPLOYMENT.md
+│   ├── DATABASE_MIGRATION.md
+│   └── ...
+├── sql/                   # Scripts SQL
+│   ├── supabase-schema.sql
+│   ├── migration-owner.sql
+│   └── ...
 ├── package.json
 ├── vite.config.ts
 ├── tailwind.config.js

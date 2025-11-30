@@ -95,7 +95,7 @@ VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 1. Vuelve a Supabase en tu navegador
 2. En tu proyecto, busca "SQL Editor" en la barra lateral
 3. Click en "New query"
-4. Copia TODO el contenido del archivo "supabase-schema.sql" que tienes en tu proyecto
+4. Copia TODO el contenido del archivo `sql/supabase-schema.sql` que tienes en tu proyecto
 5. Pégalo en el editor SQL
 6. Click en "Run" (▶️)
 7. Deberías ver "Success. No rows returned"
@@ -130,7 +130,7 @@ Abre http://localhost:5173 en tu navegador
    → Usa solo la "anon" key (es segura para el frontend)
 
 ❌ La app carga pero no guarda datos
-   → No ejecutaste el script SQL (supabase-schema.sql)
+   → No ejecutaste el script SQL (`sql/supabase-schema.sql`)
    → Ve al paso 6 y ejecuta el script en SQL Editor
 
 

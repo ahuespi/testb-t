@@ -4,9 +4,10 @@ import { Dashboard } from "./components/Dashboard";
 import { TransactionForm } from "./components/TransactionForm";
 import { TransactionHistory } from "./components/TransactionHistory";
 import { TradersStats } from "./components/TradersStats";
+import { MonthlySummary } from "./components/MonthlySummary";
 import { TransactionType } from "./types";
 
-type View = "dashboard" | "add" | "history" | "traders";
+type View = "dashboard" | "add" | "history" | "traders" | "monthly";
 
 function App() {
   const [currentView, setCurrentView] = useState<View>("dashboard");
@@ -128,13 +129,23 @@ function App() {
             >
               Traders
             </button>
+            <button
+              onClick={() => setCurrentView("monthly")}
+              className={`px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                currentView === "monthly"
+                  ? "border-primary-600 text-primary-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Resumen Mensual
+            </button>
           </div>
         </div>
       </nav>
 
       {/* Navigation - Mobile: Bottom tab bar con iconos */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 safe-area-bottom">
-        <div className="grid grid-cols-4 h-16">
+        <div className="grid grid-cols-5 h-16">
           <button
             onClick={() => setCurrentView("dashboard")}
             className={`flex flex-col items-center justify-center space-y-1 ${
@@ -226,6 +237,29 @@ function App() {
             </svg>
             <span className="text-xs font-medium">Traders</span>
           </button>
+
+          <button
+            onClick={() => setCurrentView("monthly")}
+            className={`flex flex-col items-center justify-center space-y-1 ${
+              currentView === "monthly" ? "text-primary-600" : "text-gray-500"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
+            </svg>
+            <span className="text-xs font-medium">Mensual</span>
+          </button>
         </div>
       </nav>
 
@@ -261,6 +295,9 @@ function App() {
         )}
         {currentView === "traders" && (
           <TradersStats transactions={transactions} />
+        )}
+        {currentView === "monthly" && (
+          <MonthlySummary transactions={transactions} />
         )}
       </main>
 

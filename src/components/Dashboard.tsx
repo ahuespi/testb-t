@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Transaction, TransactionType } from "../types";
 import { DashboardMetrics } from "./MetricCard";
 import { useMetrics } from "../hooks/useMetrics";
+import { useMonthlyConfig } from "../hooks/useMonthlyConfig";
 import {
   LineChart,
   Line,
@@ -33,6 +34,8 @@ interface DashboardProps {
 export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
+  const [isEditingInitialBalance, setIsEditingInitialBalance] = useState(false);
+  const [tempInitialBalance, setTempInitialBalance] = useState("");
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
@@ -40,7 +43,71 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
     .split("T")[0];
   const monthEnd = now.toISOString().split("T")[0];
 
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  // Hook para manejar el balance inicial del mes
+  const { initialBalance, updateInitialBalance } = useMonthlyConfig(currentYear, currentMonth);
+
   const metrics = useMetrics(transactions, monthStart, monthEnd);
+
+  // Calcular totales históricos
+  const historicalTotals = useMemo(() => {
+    const totalDeposited = transactions
+      .filter((t) => t.type === TransactionType.DEPOSIT)
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const totalWithdrawn = transactions
+      .filter((t) => t.type === TransactionType.WITHDRAWAL)
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    const amountPending = totalDeposited - totalWithdrawn;
+    
+    return {
+      totalDeposited,
+      totalWithdrawn,
+      amountPending,
+    };
+  }, [transactions]);
+
+  // Calcular balance al inicio del mes - ya no se usa para la métrica, solo informativo
+  const calculatedInitialMonthBalance = useMemo(() => {
+    // Todas las transacciones ANTES del inicio del mes
+    const transactionsBeforeMonth = transactions.filter((t) => {
+      const txDate = new Date(t.date);
+      return txDate < new Date(monthStart);
+    });
+
+    const depositsBeforeMonth = transactionsBeforeMonth
+      .filter((t) => t.type === TransactionType.DEPOSIT)
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const withdrawalsBeforeMonth = transactionsBeforeMonth
+      .filter((t) => t.type === TransactionType.WITHDRAWAL)
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const netProfitBeforeMonth = transactionsBeforeMonth
+      .filter((t) => t.type !== TransactionType.BET_PENDING)
+      .reduce((sum, t) => sum + t.net_profit, 0);
+
+    return depositsBeforeMonth - withdrawalsBeforeMonth + netProfitBeforeMonth;
+  }, [transactions, monthStart]);
+
+  const handleSaveInitialBalance = async () => {
+    const balance = parseFloat(tempInitialBalance);
+    if (!isNaN(balance)) {
+      const result = await updateInitialBalance(balance);
+      if (result.success) {
+        setIsEditingInitialBalance(false);
+        setTempInitialBalance("");
+      }
+    }
+  };
+
+  const handleEditInitialBalance = () => {
+    setTempInitialBalance(initialBalance?.toString() || "");
+    setIsEditingInitialBalance(true);
+  };
 
   // Prepare chart data - daily cumulative profit
   const chartData = useMemo(() => {
@@ -136,7 +203,30 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Dashboard</h1>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+          {/* Botón para editar balance inicial */}
+          <button
+            onClick={handleEditInitialBalance}
+            className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            Editar Balance Inicial
+          </button>
+        </div>
         <p className="text-gray-600">
           Resumen del mes de{" "}
           {new Date().toLocaleDateString("es-AR", {
@@ -144,10 +234,146 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
             year: "numeric",
           })}
         </p>
+        {initialBalance !== null && (
+          <p className="text-sm text-gray-500 mt-1">
+            Balance inicial del mes: {formatCurrency(initialBalance)}
+          </p>
+        )}
       </div>
 
+      {/* Modal para editar balance inicial */}
+      {isEditingInitialBalance && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">
+              Balance Inicial del Mes
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Establece el balance con el que comenzaste el mes de{" "}
+              {new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })}
+            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Monto inicial
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={tempInitialBalance}
+                onChange={(e) => setTempInitialBalance(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                placeholder="Ej: 300000"
+                autoFocus
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Balance calculado automáticamente: {formatCurrency(calculatedInitialMonthBalance)}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleSaveInitialBalance}
+                className="flex-1 bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors font-medium"
+              >
+                Guardar
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditingInitialBalance(false);
+                  setTempInitialBalance("");
+                }}
+                className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Metrics Cards */}
-      <DashboardMetrics metrics={metrics} />
+      <DashboardMetrics metrics={metrics} initialMonthBalance={initialBalance} />
+
+      {/* Balance Histórico - Información destacada */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">Balance Histórico Total</h3>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-8 w-8 opacity-80"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white bg-opacity-20 rounded-lg p-4">
+            <p className="text-sm font-medium text-blue-100 mb-1">
+              💰 Total Depositado
+            </p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(historicalTotals.totalDeposited)}
+            </p>
+            <p className="text-xs text-blue-100 mt-1">
+              Acumulado histórico
+            </p>
+          </div>
+
+          <div className="bg-white bg-opacity-20 rounded-lg p-4">
+            <p className="text-sm font-medium text-blue-100 mb-1">
+              💸 Total Retirado
+            </p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(historicalTotals.totalWithdrawn)}
+            </p>
+            <p className="text-xs text-blue-100 mt-1">
+              Retiros acumulados
+            </p>
+          </div>
+
+          <div className="bg-white bg-opacity-30 rounded-lg p-4 border-2 border-white border-opacity-50">
+            <p className="text-sm font-medium text-blue-100 mb-1">
+              🎯 Monto Faltante
+            </p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(historicalTotals.amountPending)}
+            </p>
+            <p className="text-xs text-blue-100 mt-1">
+              Por recuperar
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 bg-white bg-opacity-10 rounded-lg p-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-blue-100">Porcentaje recuperado:</span>
+            <span className="font-semibold">
+              {historicalTotals.totalDeposited > 0
+                ? ((historicalTotals.totalWithdrawn / historicalTotals.totalDeposited) * 100).toFixed(2)
+                : 0}%
+            </span>
+          </div>
+          <div className="mt-2 bg-white bg-opacity-20 rounded-full h-2">
+            <div
+              className="bg-white rounded-full h-2 transition-all duration-500"
+              style={{
+                width: `${
+                  historicalTotals.totalDeposited > 0
+                    ? Math.min((historicalTotals.totalWithdrawn / historicalTotals.totalDeposited) * 100, 100)
+                    : 0
+                }%`,
+              }}
+            ></div>
+          </div>
+        </div>
+      </div>
 
       {/* Apuestas Pendientes */}
       {pendingBets.length > 0 && (

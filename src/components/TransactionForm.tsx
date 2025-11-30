@@ -114,10 +114,72 @@ export const TransactionForm = ({
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        Registrar Apuesta
+        Nueva Transacción
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Tipo de Transacción */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Tipo de Transacción
+          </label>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  type: TransactionType.BET_PENDING,
+                  stake: 5,
+                  amount: calculateStakeAmount(5, bankAmount),
+                  odds: 2.0,
+                }))
+              }
+              className={`px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                isBettingTransaction
+                  ? "bg-primary-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              🎯 Apuesta
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  type: TransactionType.DEPOSIT,
+                  amount: 0,
+                }))
+              }
+              className={`px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                formData.type === TransactionType.DEPOSIT
+                  ? "bg-green-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              💰 Depósito
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                setFormData((prev) => ({
+                  ...prev,
+                  type: TransactionType.WITHDRAWAL,
+                  amount: 0,
+                }))
+              }
+              className={`px-4 py-3 rounded-md text-sm font-medium transition-colors ${
+                formData.type === TransactionType.WITHDRAWAL
+                  ? "bg-red-600 text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              💸 Retiro
+            </button>
+          </div>
+        </div>
+
         {/* Date */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -214,6 +276,35 @@ export const TransactionForm = ({
                 Retiro
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Monto para Depósitos/Retiros */}
+        {!isBettingTransaction && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Monto
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              value={formData.amount || ""}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  amount: Number(e.target.value),
+                }))
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              required
+              placeholder="Ingrese el monto"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              {formData.type === TransactionType.DEPOSIT
+                ? "Monto que deseas depositar"
+                : "Monto que deseas retirar"}
+            </p>
           </div>
         )}
 
@@ -359,7 +450,13 @@ export const TransactionForm = ({
           disabled={isSubmitting}
           className="w-full bg-primary-600 text-white py-3 rounded-md font-medium hover:bg-primary-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "Guardando..." : "Registrar Apuesta Pendiente"}
+          {isSubmitting
+            ? "Guardando..."
+            : isBettingTransaction
+            ? "Registrar Apuesta Pendiente"
+            : formData.type === TransactionType.DEPOSIT
+            ? "Registrar Depósito"
+            : "Registrar Retiro"}
         </button>
       </form>
     </div>

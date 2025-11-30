@@ -30,7 +30,7 @@ VITE_SUPABASE_URL=https://tuproyecto.supabase.co
 VITE_SUPABASE_ANON_KEY=tu-anon-key-aqui
 ```
 
-4. Ve a SQL Editor y ejecuta el contenido de `supabase-schema.sql`
+4. Ve a SQL Editor y ejecuta el contenido de `sql/supabase-schema.sql`
 
 ## 🚀 3. Correr la Aplicación
 
@@ -110,7 +110,7 @@ En 2-3 minutos tendrás tu app en: `https://tu-app.vercel.app`
 → Verifica que las credenciales en `.env` sean correctas
 
 ### No se guardan las transacciones
-→ Asegúrate de haber ejecutado `supabase-schema.sql` en Supabase
+→ Asegúrate de haber ejecutado `sql/supabase-schema.sql` en Supabase
 
 ### El puerto 5173 está ocupado
 → Cierra otras instancias de Vite o usa: `npm run dev -- --port 3000`

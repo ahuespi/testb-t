@@ -31,15 +31,30 @@ const MetricCard = ({
 
 interface DashboardMetricsProps {
   metrics: MetricsSummary;
+  initialMonthBalance?: number;
 }
 
-export const DashboardMetrics = ({ metrics }: DashboardMetricsProps) => {
+export const DashboardMetrics = ({ metrics, initialMonthBalance }: DashboardMetricsProps) => {
+  // Determinar el trend del balance actual comparado con el inicio del mes
+  const balanceTrend = initialMonthBalance !== undefined
+    ? metrics.currentBalance >= initialMonthBalance
+      ? "positive"
+      : "negative"
+    : metrics.currentBalance >= 0
+    ? "positive"
+    : "negative";
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <MetricCard
         title="Balance Actual"
         value={formatCurrency(metrics.currentBalance)}
-        trend={metrics.currentBalance >= 0 ? "positive" : "negative"}
+        trend={balanceTrend}
+        subtitle={
+          initialMonthBalance !== undefined
+            ? `Inicio del mes: ${formatCurrency(initialMonthBalance)}`
+            : undefined
+        }
       />
 
       <MetricCard

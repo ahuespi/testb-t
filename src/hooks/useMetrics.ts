@@ -40,8 +40,6 @@ export const useMetrics = (transactions: Transaction[], filterStart?: string, fi
         return sum + stakeAmount;
       }, 0);
 
-    const netProfit = filteredTransactions.reduce((sum, t) => sum + t.net_profit, 0);
-
     const wonBets = filteredTransactions.filter(t => 
       t.type === TransactionType.BET_WON || 
       (t.type === TransactionType.BET_CASHOUT && t.net_profit > 0)
@@ -59,7 +57,26 @@ export const useMetrics = (transactions: Transaction[], filterStart?: string, fi
     const totalBets = wonBets + lostBets;
     const winRate = totalBets > 0 ? (wonBets / totalBets) * 100 : 0;
 
-    const currentBalance = deposits - withdrawals + netProfit;
+    // Calcular ganancia neta: apuestas resueltas - apuestas pendientes
+    const resolvedNetProfit = filteredTransactions
+      .filter(
+        (t) =>
+          t.type !== TransactionType.DEPOSIT &&
+          t.type !== TransactionType.WITHDRAWAL &&
+          t.type !== TransactionType.BET_PENDING
+      )
+      .reduce((sum, t) => sum + t.net_profit, 0);
+
+    // Restar apuestas pendientes (dinero en riesgo)
+    const pendingAmount = filteredTransactions
+      .filter((t) => t.type === TransactionType.BET_PENDING)
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // Ganancia neta total = ganancia resuelta - apuestas pendientes
+    const netProfitWithPending = resolvedNetProfit - pendingAmount;
+
+    // Balance actual = depósitos - retiros + ganancia neta (con pendientes restadas)
+    const currentBalance = deposits - withdrawals + netProfitWithPending;
 
     // ROI no incluye las apuestas pendientes en el cálculo
     const totalBetExcludingPending = totalBet;
@@ -73,7 +90,7 @@ export const useMetrics = (transactions: Transaction[], filterStart?: string, fi
       currentBalance,
       monthlyROI,
       totalBet,
-      netProfit: netProfitExcludingPending,
+      netProfit: netProfitWithPending, // Usar ganancia neta con pendientes restadas
       wonBets,
       lostBets,
       cashoutBets,
@@ -84,4 +101,3 @@ export const useMetrics = (transactions: Transaction[], filterStart?: string, fi
 
   return metrics;
 };
-

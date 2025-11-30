@@ -51,10 +51,6 @@ export const EditTransactionModal = ({
   const [stake, setStake] = useState(getOriginalStakeValue());
 
   const isPending = transaction.type === TransactionType.BET_PENDING;
-  const isWonOrCashout =
-    transaction.type === TransactionType.BET_WON ||
-    transaction.type === TransactionType.BET_CASHOUT;
-  const isLost = transaction.type === TransactionType.BET_LOST;
   const isBettingTransaction = [
     TransactionType.BET_PENDING,
     TransactionType.BET_LOST,
@@ -435,10 +431,10 @@ export const EditTransactionModal = ({
                       <span className="text-gray-600">Nuevo beneficio:</span>
                       <span
                         className={
-                          newNetProfit >= 0 ? "text-green-600" : "text-red-600"
+                          calculatedNetProfit >= 0 ? "text-green-600" : "text-red-600"
                         }
                       >
-                        {formatCurrency(newNetProfit)}
+                        {formatCurrency(calculatedNetProfit)}
                       </span>
                     </div>
                     <div className="flex justify-between font-medium pt-2 border-t border-blue-300">

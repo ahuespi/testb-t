@@ -52,6 +52,10 @@ export const useMetrics = (transactions: Transaction[], filterStart?: string, fi
       (t.type === TransactionType.BET_CASHOUT && t.net_profit < 0)
     ).length;
 
+    const cashoutBets = filteredTransactions.filter(t => 
+      t.type === TransactionType.BET_CASHOUT
+    ).length;
+
     const totalBets = wonBets + lostBets;
     const winRate = totalBets > 0 ? (wonBets / totalBets) * 100 : 0;
 
@@ -72,6 +76,7 @@ export const useMetrics = (transactions: Transaction[], filterStart?: string, fi
       netProfit: netProfitExcludingPending,
       wonBets,
       lostBets,
+      cashoutBets,
       pendingBets,
       winRate,
     };

@@ -302,8 +302,6 @@ export const TradersStats = ({ transactions }: TradersStatsProps) => {
             <tbody className="bg-white divide-y divide-gray-200">
               {Object.values(BetOwner).map((owner) => {
                 const stats = statsByOwner[owner];
-                const totalResolvedBets =
-                  stats.wonBets + stats.lostBets + stats.cashoutBets;
 
                 return (
                   <tr key={owner} className="hover:bg-gray-50">

@@ -47,7 +47,10 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
   const currentMonth = now.getMonth() + 1;
 
   // Hook para manejar el balance inicial del mes
-  const { initialBalance, updateInitialBalance } = useMonthlyConfig(currentYear, currentMonth);
+  const { initialBalance, updateInitialBalance } = useMonthlyConfig(
+    currentYear,
+    currentMonth
+  );
 
   const metrics = useMetrics(transactions, monthStart, monthEnd);
 
@@ -56,13 +59,13 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
     const totalDeposited = transactions
       .filter((t) => t.type === TransactionType.DEPOSIT)
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     const totalWithdrawn = transactions
       .filter((t) => t.type === TransactionType.WITHDRAWAL)
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     const amountPending = totalDeposited - totalWithdrawn;
-    
+
     return {
       totalDeposited,
       totalWithdrawn,
@@ -250,7 +253,10 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
             </h3>
             <p className="text-sm text-gray-600 mb-4">
               Establece el balance con el que comenzaste el mes de{" "}
-              {new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })}
+              {new Date().toLocaleDateString("es-AR", {
+                month: "long",
+                year: "numeric",
+              })}
             </p>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -266,7 +272,8 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
                 autoFocus
               />
               <p className="text-xs text-gray-500 mt-2">
-                Balance calculado automáticamente: {formatCurrency(calculatedInitialMonthBalance)}
+                Balance calculado automáticamente:{" "}
+                {formatCurrency(calculatedInitialMonthBalance)}
               </p>
             </div>
             <div className="flex gap-3">
@@ -289,91 +296,6 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
           </div>
         </div>
       )}
-
-      {/* Metrics Cards */}
-      <DashboardMetrics metrics={metrics} initialMonthBalance={initialBalance ?? undefined} />
-
-      {/* Balance Histórico - Información destacada */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold">Balance Histórico Total</h3>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-8 w-8 opacity-80"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-            />
-          </svg>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white bg-opacity-20 rounded-lg p-4">
-            <p className="text-sm font-medium text-blue-100 mb-1">
-              💰 Total Depositado
-            </p>
-            <p className="text-2xl font-bold">
-              {formatCurrency(historicalTotals.totalDeposited)}
-            </p>
-            <p className="text-xs text-blue-100 mt-1">
-              Acumulado histórico
-            </p>
-          </div>
-
-          <div className="bg-white bg-opacity-20 rounded-lg p-4">
-            <p className="text-sm font-medium text-blue-100 mb-1">
-              💸 Total Retirado
-            </p>
-            <p className="text-2xl font-bold">
-              {formatCurrency(historicalTotals.totalWithdrawn)}
-            </p>
-            <p className="text-xs text-blue-100 mt-1">
-              Retiros acumulados
-            </p>
-          </div>
-
-          <div className="bg-white bg-opacity-30 rounded-lg p-4 border-2 border-white border-opacity-50">
-            <p className="text-sm font-medium text-blue-100 mb-1">
-              🎯 Monto Faltante
-            </p>
-            <p className="text-2xl font-bold">
-              {formatCurrency(historicalTotals.amountPending)}
-            </p>
-            <p className="text-xs text-blue-100 mt-1">
-              Por recuperar
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-4 bg-white bg-opacity-10 rounded-lg p-3">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-blue-100">Porcentaje recuperado:</span>
-            <span className="font-semibold">
-              {historicalTotals.totalDeposited > 0
-                ? ((historicalTotals.totalWithdrawn / historicalTotals.totalDeposited) * 100).toFixed(2)
-                : 0}%
-            </span>
-          </div>
-          <div className="mt-2 bg-white bg-opacity-20 rounded-full h-2">
-            <div
-              className="bg-white rounded-full h-2 transition-all duration-500"
-              style={{
-                width: `${
-                  historicalTotals.totalDeposited > 0
-                    ? Math.min((historicalTotals.totalWithdrawn / historicalTotals.totalDeposited) * 100, 100)
-                    : 0
-                }%`,
-              }}
-            ></div>
-          </div>
-        </div>
-      </div>
 
       {/* Apuestas Pendientes */}
       {pendingBets.length > 0 && (
@@ -456,6 +378,98 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
           </div>
         </div>
       )}
+
+      {/* Metrics Cards */}
+      <DashboardMetrics
+        metrics={metrics}
+        initialMonthBalance={initialBalance ?? undefined}
+      />
+
+      {/* Balance Histórico - Información destacada */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold">Balance Histórico Total</h3>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-8 w-8 opacity-80"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white bg-opacity-20 rounded-lg p-4">
+            <p className="text-sm font-medium text-blue-100 mb-1">
+              💰 Total Depositado
+            </p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(historicalTotals.totalDeposited)}
+            </p>
+            <p className="text-xs text-blue-100 mt-1">Acumulado histórico</p>
+          </div>
+
+          <div className="bg-white bg-opacity-20 rounded-lg p-4">
+            <p className="text-sm font-medium text-blue-100 mb-1">
+              💸 Total Retirado
+            </p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(historicalTotals.totalWithdrawn)}
+            </p>
+            <p className="text-xs text-blue-100 mt-1">Retiros acumulados</p>
+          </div>
+
+          <div className="bg-white bg-opacity-30 rounded-lg p-4 border-2 border-white border-opacity-50">
+            <p className="text-sm font-medium text-blue-100 mb-1">
+              🎯 Monto Faltante
+            </p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(historicalTotals.amountPending)}
+            </p>
+            <p className="text-xs text-blue-100 mt-1">Por recuperar</p>
+          </div>
+        </div>
+
+        <div className="mt-4 bg-white bg-opacity-10 rounded-lg p-3">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-blue-100">Porcentaje recuperado:</span>
+            <span className="font-semibold">
+              {historicalTotals.totalDeposited > 0
+                ? (
+                    (historicalTotals.totalWithdrawn /
+                      historicalTotals.totalDeposited) *
+                    100
+                  ).toFixed(2)
+                : 0}
+              %
+            </span>
+          </div>
+          <div className="mt-2 bg-white bg-opacity-20 rounded-full h-2">
+            <div
+              className="bg-white rounded-full h-2 transition-all duration-500"
+              style={{
+                width: `${
+                  historicalTotals.totalDeposited > 0
+                    ? Math.min(
+                        (historicalTotals.totalWithdrawn /
+                          historicalTotals.totalDeposited) *
+                          100,
+                        100
+                      )
+                    : 0
+                }%`,
+              }}
+            ></div>
+          </div>
+        </div>
+      </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

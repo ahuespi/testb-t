@@ -23,7 +23,7 @@ interface TransactionHistoryProps {
   ) => Promise<{ success: boolean }>;
 }
 
-type SortField = "date" | "amount" | "net_profit";
+type SortField = "date" | "created_at" | "amount" | "net_profit";
 type SortDirection = "asc" | "desc";
 
 export const TransactionHistory = ({
@@ -38,7 +38,7 @@ export const TransactionHistory = ({
     searchQuery?: string;
   }>({ period: "month" });
 
-  const [sortField, setSortField] = useState<SortField>("date");
+  const [sortField, setSortField] = useState<SortField>("created_at");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [editingTransaction, setEditingTransaction] =
     useState<Transaction | null>(null);
@@ -76,6 +76,10 @@ export const TransactionHistory = ({
         case "date":
           aVal = new Date(a.date).getTime();
           bVal = new Date(b.date).getTime();
+          break;
+        case "created_at":
+          aVal = new Date(a.created_at).getTime();
+          bVal = new Date(b.created_at).getTime();
           break;
         case "amount":
           aVal = a.amount;

@@ -291,7 +291,7 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
       )}
 
       {/* Metrics Cards */}
-      <DashboardMetrics metrics={metrics} initialMonthBalance={initialBalance} />
+      <DashboardMetrics metrics={metrics} initialMonthBalance={initialBalance ?? undefined} />
 
       {/* Balance Histórico - Información destacada */}
       <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">

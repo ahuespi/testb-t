@@ -1,0 +1,5 @@
+This is a placeholder for the 192x192 PNG icon.
+Please convert icon-192x192.svg to PNG format using an online tool like:
+- https://cloudconvert.com/svg-to-png
+- https://convertio.co/svg-png/
+- Or use ImageMagick: convert icon-192x192.svg -resize 192x192 icon-192x192.png

@@ -1,0 +1,7 @@
+<!-- Icon 192x192 - Placeholder SVG -->
+<svg width="192" height="192" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" fill="#1e40af"/>
+  <text x="96" y="110" font-size="80" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-weight="bold">BT</text>
+  <circle cx="96" cy="140" r="8" fill="#10b981"/>
+</svg>
+

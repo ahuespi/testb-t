@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { Transaction, TransactionType } from "../types";
 import { formatCurrency } from "../lib/utils";
+import { supabase } from "../lib/supabase";
 
 interface MonthlySummaryProps {
   transactions: Transaction[];
@@ -22,6 +23,10 @@ interface MonthData {
 }
 
 export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
   // Calcular balance actual real (para el último mes)
   const currentBalance = useMemo(() => {
     // Filtrar transacciones históricas
@@ -87,7 +92,7 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
     let runningBalance = 0;
 
     // Procesar desde el más antiguo al más reciente para calcular balances
-    for (let i = sortedKeys.length - 1; i >= 0; i--) {
+    for (let i = 0; i < sortedKeys.length; i++) {
       const key = sortedKeys[i];
       const [year, month] = key.split("-");
       const monthTransactions = monthsMap.get(key)!;
@@ -151,6 +156,8 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
       const initialBalance = runningBalance;
       // Balance final = balance inicial + depósitos - retiros + ganancia neta (que ya incluye pendientes)
       const finalBalance = runningBalance + deposits - withdrawals + netProfit;
+      
+      // Actualizar runningBalance para el próximo mes
       runningBalance = finalBalance;
 
       const monthNames = [
@@ -186,6 +193,66 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
 
     return data;
   }, [transactions, currentBalance]);
+
+  // Guardar balance final de cada mes en la base de datos
+  useEffect(() => {
+    const saveFinalBalances = async () => {
+      if (monthlyData.length === 0) return;
+
+      for (const monthData of monthlyData) {
+        // Extraer año y mes del string "YYYY-MM"
+        const [yearStr, monthStr] = monthData.month.split("-");
+        const year = parseInt(yearStr);
+        const month = parseInt(monthStr);
+        
+        // Solo guardar si el mes ya terminó (no el mes actual)
+        const lastDayOfMonth = new Date(year, month, 0);
+        const today = new Date();
+        
+        // Si el mes ya terminó, guardar su balance final
+        if (lastDayOfMonth < today) {
+          try {
+            await supabase
+              .from('monthly_config')
+              .upsert(
+                {
+                  year: year,
+                  month: month,
+                  final_balance: monthData.finalBalance,
+                  updated_at: new Date().toISOString(),
+                },
+                {
+                  onConflict: 'year,month',
+                }
+              );
+          } catch (err) {
+            console.error(`Error saving final balance for ${year}-${month}:`, err);
+          }
+        } else if (year === currentYear && month === currentMonth) {
+          // Para el mes actual, también guardar el balance (se actualizará constantemente)
+          try {
+            await supabase
+              .from('monthly_config')
+              .upsert(
+                {
+                  year: year,
+                  month: month,
+                  final_balance: monthData.finalBalance,
+                  updated_at: new Date().toISOString(),
+                },
+                {
+                  onConflict: 'year,month',
+                }
+              );
+          } catch (err) {
+            console.error(`Error saving final balance for current month:`, err);
+          }
+        }
+      }
+    };
+
+    saveFinalBalances();
+  }, [monthlyData, currentYear, currentMonth]);
 
   // Agrupar por año
   const dataByYear = useMemo(() => {
@@ -257,8 +324,8 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600">
                       +{formatCurrency(month.deposits)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600">
-                      -{formatCurrency(month.withdrawals)}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600">
+                      +{formatCurrency(month.withdrawals)}
                     </td>
                     <td
                       className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${
@@ -373,8 +440,8 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
                   </div>
                   <div>
                     <span className="text-gray-500">Retiros:</span>
-                    <p className="font-medium text-red-600">
-                      -{formatCurrency(month.withdrawals)}
+                    <p className="font-medium text-green-600">
+                      +{formatCurrency(month.withdrawals)}
                     </p>
                   </div>
                   <div>

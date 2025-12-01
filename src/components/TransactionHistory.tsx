@@ -150,7 +150,9 @@ export const TransactionHistory = ({
       transaction.type === TransactionType.BET_PENDING ||
       transaction.type === TransactionType.BET_WON ||
       transaction.type === TransactionType.BET_CASHOUT ||
-      transaction.type === TransactionType.BET_LOST
+      transaction.type === TransactionType.BET_LOST ||
+      transaction.type === TransactionType.WITHDRAWAL ||
+      transaction.type === TransactionType.DEPOSIT
     );
   };
 

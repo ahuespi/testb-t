@@ -89,3 +89,37 @@ export interface DateRange {
   end: string;
 }
 
+export enum GoalType {
+  PULPO = 'PULPO',
+  TRADE = 'TRADE',
+  AUTO = 'AUTO',
+  GASTOS = 'GASTOS',
+}
+
+export interface MonthlyGoal {
+  id: string;
+  year: number;
+  month: number; // 1-12
+  goal_type: GoalType;
+  target_amount: number;
+  completed: boolean;
+  completed_at?: string;
+  notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const GOAL_DEFAULTS: Record<GoalType, number> = {
+  [GoalType.PULPO]: 10000,
+  [GoalType.TRADE]: 15000,
+  [GoalType.AUTO]: 52000,
+  [GoalType.GASTOS]: 100000,
+};
+
+export const GOAL_LABELS: Record<GoalType, string> = {
+  [GoalType.PULPO]: 'Cuota Pulpo',
+  [GoalType.TRADE]: 'Cuota Trade',
+  [GoalType.AUTO]: 'Cuota Auto',
+  [GoalType.GASTOS]: 'Cuota Gastos',
+};
+

@@ -162,9 +162,10 @@ export const EditTransactionModal = ({
     }
   };
 
-  // Permitir editar todas las apuestas (pendientes, ganadas, perdidas, cashout)
-  // No permitir editar depósitos/retiros
-  const canEdit = isBettingTransaction;
+  // Permitir editar todas las apuestas, depósitos y retiros
+  const canEdit = isBettingTransaction || 
+    transaction.type === TransactionType.DEPOSIT || 
+    transaction.type === TransactionType.WITHDRAWAL;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -482,6 +483,24 @@ export const EditTransactionModal = ({
                 </div>
               )}
 
+              {/* Monto - Para depósitos y retiros */}
+              {(transaction.type === TransactionType.DEPOSIT || 
+                transaction.type === TransactionType.WITHDRAWAL) && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {transaction.type === TransactionType.DEPOSIT ? "Monto Depositado" : "Monto Retirado"} (ARS)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    required
+                  />
+                </div>
+              )}
+
               {/* Notas */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -495,6 +514,8 @@ export const EditTransactionModal = ({
                   placeholder={
                     isPending
                       ? "Ej: Ganó en el minuto 90"
+                      : transaction.type === TransactionType.DEPOSIT || transaction.type === TransactionType.WITHDRAWAL
+                      ? "Ej: Transferencia bancaria"
                       : "Ej: Bono del 10% por promoción"
                   }
                 />

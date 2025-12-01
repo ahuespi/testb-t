@@ -5,9 +5,11 @@ import { TransactionForm } from "./components/TransactionForm";
 import { TransactionHistory } from "./components/TransactionHistory";
 import { TradersStats } from "./components/TradersStats";
 import { MonthlySummary } from "./components/MonthlySummary";
+import { MonthlyGoals } from "./components/MonthlyGoals";
+import { BalanceEvolution } from "./components/BalanceEvolution";
 import { TransactionType } from "./types";
 
-type View = "dashboard" | "add" | "history" | "traders" | "monthly";
+type View = "dashboard" | "add" | "history" | "traders" | "monthly" | "goals" | "evolution";
 
 function App() {
   const [currentView, setCurrentView] = useState<View>("dashboard");
@@ -20,6 +22,11 @@ function App() {
     updateTransaction,
     deleteTransaction,
   } = useTransactions();
+
+  // Get current year and month for goals
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // 1-12
 
   const handleAddTransaction = async (formData: any) => {
     const result = await addTransaction(formData);
@@ -139,13 +146,33 @@ function App() {
             >
               Resumen Mensual
             </button>
+            <button
+              onClick={() => setCurrentView("goals")}
+              className={`px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                currentView === "goals"
+                  ? "border-primary-600 text-primary-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Objetivos
+            </button>
+            <button
+              onClick={() => setCurrentView("evolution")}
+              className={`px-3 py-4 text-sm font-medium border-b-2 transition-colors ${
+                currentView === "evolution"
+                  ? "border-primary-600 text-primary-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Evolución
+            </button>
           </div>
         </div>
       </nav>
 
       {/* Navigation - Mobile: Bottom tab bar con iconos */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 safe-area-bottom">
-        <div className="grid grid-cols-5 h-16">
+        <div className="grid grid-cols-6 h-16">
           <button
             onClick={() => setCurrentView("dashboard")}
             className={`flex flex-col items-center justify-center space-y-1 ${
@@ -260,6 +287,29 @@ function App() {
             </svg>
             <span className="text-xs font-medium">Mensual</span>
           </button>
+
+          <button
+            onClick={() => setCurrentView("goals")}
+            className={`flex flex-col items-center justify-center space-y-1 ${
+              currentView === "goals" ? "text-primary-600" : "text-gray-500"
+            }`}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span className="text-xs font-medium">Objetivos</span>
+          </button>
         </div>
       </nav>
 
@@ -298,6 +348,12 @@ function App() {
         )}
         {currentView === "monthly" && (
           <MonthlySummary transactions={transactions} />
+        )}
+        {currentView === "goals" && (
+          <MonthlyGoals year={currentYear} month={currentMonth} />
+        )}
+        {currentView === "evolution" && (
+          <BalanceEvolution transactions={transactions} />
         )}
       </main>
 

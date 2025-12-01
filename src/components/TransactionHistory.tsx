@@ -5,6 +5,7 @@ import {
   formatDate,
   getTransactionTypeLabel,
   getTransactionTypeColor,
+  parseLocalDate,
 } from "../lib/utils";
 import { FilterBar } from "./FilterBar";
 import { EditTransactionModal } from "./EditTransactionModal";
@@ -49,10 +50,10 @@ export const TransactionHistory = ({
 
     // Filter by date range
     if (filters.dateRange) {
-      const startTime = new Date(filters.dateRange.start).getTime();
-      const endTime = new Date(filters.dateRange.end).getTime();
+      const startTime = parseLocalDate(filters.dateRange.start).getTime();
+      const endTime = parseLocalDate(filters.dateRange.end).getTime();
       filtered = filtered.filter((t) => {
-        const txTime = new Date(t.date).getTime();
+        const txTime = parseLocalDate(t.date).getTime();
         return txTime >= startTime && txTime <= endTime;
       });
     }
@@ -74,12 +75,12 @@ export const TransactionHistory = ({
 
       switch (sortField) {
         case "date":
-          aVal = new Date(a.date).getTime();
-          bVal = new Date(b.date).getTime();
+          aVal = parseLocalDate(a.date).getTime();
+          bVal = parseLocalDate(b.date).getTime();
           break;
         case "created_at":
-          aVal = new Date(a.created_at).getTime();
-          bVal = new Date(b.created_at).getTime();
+          aVal = parseLocalDate(a.created_at).getTime();
+          bVal = parseLocalDate(b.created_at).getTime();
           break;
         case "amount":
           aVal = a.amount;

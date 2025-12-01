@@ -47,24 +47,32 @@ export const formatCurrency = (amount: number): string => {
 };
 
 /**
+ * Parse date string to local Date object
+ * Fixes timezone issue: Supabase DATE fields are stored as YYYY-MM-DD
+ * and new Date("YYYY-MM-DD") interprets it as UTC midnight, which can
+ * shift to the previous day in negative UTC offsets (like Argentina UTC-3)
+ */
+export const parseLocalDate = (dateString: string): Date => {
+  // If dateString is already in YYYY-MM-DD format (from Supabase DATE field)
+  // parse it as local date to avoid timezone issues
+  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day); // month is 0-indexed
+  } else {
+    // For ISO datetime strings, extract date part first
+    const datePart = dateString.split('T')[0];
+    const [year, month, day] = datePart.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+};
+
+/**
  * Format date to display format DD/MM/YYYY
  * Fixes timezone issue: Supabase DATE fields are stored as YYYY-MM-DD
  * and need to be parsed as local date, not UTC
  */
 export const formatDate = (dateString: string): string => {
-  // If dateString is already in YYYY-MM-DD format (from Supabase DATE field)
-  // parse it as local date to avoid timezone issues
-  let date: Date;
-  
-  if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    const [year, month, day] = dateString.split('-').map(Number);
-    date = new Date(year, month - 1, day); // month is 0-indexed
-  } else {
-    // For ISO datetime strings, extract date part first
-    const datePart = dateString.split('T')[0];
-    const [year, month, day] = datePart.split('-').map(Number);
-    date = new Date(year, month - 1, day);
-  }
+  const date = parseLocalDate(dateString);
   
   // Format as DD/MM/YYYY
   const day = date.getDate().toString().padStart(2, '0');

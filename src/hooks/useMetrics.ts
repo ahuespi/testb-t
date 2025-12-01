@@ -1,16 +1,22 @@
 import { useMemo } from 'react';
 import { Transaction, MetricsSummary, TransactionType } from '../types';
+import { parseLocalDate } from '../lib/utils';
 
-export const useMetrics = (transactions: Transaction[], filterStart?: string, filterEnd?: string) => {
+export const useMetrics = (
+  transactions: Transaction[],
+  filterStart?: string,
+  filterEnd?: string,
+  initialBalance?: number
+) => {
   const metrics = useMemo<MetricsSummary>(() => {
     let filteredTransactions = transactions;
 
     // Apply date filters
     if (filterStart || filterEnd) {
       filteredTransactions = transactions.filter(t => {
-        const txDate = new Date(t.date).getTime();
-        const start = filterStart ? new Date(filterStart).getTime() : 0;
-        const end = filterEnd ? new Date(filterEnd).getTime() : Infinity;
+        const txDate = parseLocalDate(t.date).getTime();
+        const start = filterStart ? parseLocalDate(filterStart).getTime() : 0;
+        const end = filterEnd ? parseLocalDate(filterEnd).getTime() : Infinity;
         return txDate >= start && txDate <= end;
       });
     }
@@ -75,8 +81,8 @@ export const useMetrics = (transactions: Transaction[], filterStart?: string, fi
     // Ganancia neta total = ganancia resuelta - apuestas pendientes
     const netProfitWithPending = resolvedNetProfit - pendingAmount;
 
-    // Balance actual = depósitos - retiros + ganancia neta (con pendientes restadas)
-    const currentBalance = deposits - withdrawals + netProfitWithPending;
+    // Balance actual = balance inicial + depósitos - retiros + ganancia neta (con pendientes restadas)
+    const currentBalance = (initialBalance ?? 0) + deposits - withdrawals + netProfitWithPending;
 
     // ROI no incluye las apuestas pendientes en el cálculo
     const totalBetExcludingPending = totalBet;
@@ -97,7 +103,7 @@ export const useMetrics = (transactions: Transaction[], filterStart?: string, fi
       pendingBets,
       winRate,
     };
-  }, [transactions, filterStart, filterEnd]);
+  }, [transactions, filterStart, filterEnd, initialBalance]);
 
   return metrics;
 };

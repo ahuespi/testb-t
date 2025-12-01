@@ -13,7 +13,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { formatCurrency, formatDate } from "../lib/utils";
+import { formatCurrency, formatDate, parseLocalDate } from "../lib/utils";
 import { EditTransactionModal } from "./EditTransactionModal";
 
 interface DashboardProps {
@@ -41,7 +41,9 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     .toISOString()
     .split("T")[0];
-  const monthEnd = now.toISOString().split("T")[0];
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    .toISOString()
+    .split("T")[0];
 
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
@@ -52,7 +54,12 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
     currentMonth
   );
 
-  const metrics = useMetrics(transactions, monthStart, monthEnd);
+  const metrics = useMetrics(
+    transactions,
+    monthStart,
+    monthEnd,
+    initialBalance ?? 0
+  );
 
   // Calcular totales históricos
   const historicalTotals = useMemo(() => {
@@ -77,8 +84,8 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
   const calculatedInitialMonthBalance = useMemo(() => {
     // Todas las transacciones ANTES del inicio del mes
     const transactionsBeforeMonth = transactions.filter((t) => {
-      const txDate = new Date(t.date);
-      return txDate < new Date(monthStart);
+      const txDate = parseLocalDate(t.date);
+      return txDate < parseLocalDate(monthStart);
     });
 
     const depositsBeforeMonth = transactionsBeforeMonth
@@ -115,13 +122,17 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
   // Prepare chart data - daily cumulative profit
   const chartData = useMemo(() => {
     const monthTransactions = transactions.filter((t) => {
-      const txDate = new Date(t.date);
-      return txDate >= new Date(monthStart) && txDate <= new Date(monthEnd);
+      const txDate = parseLocalDate(t.date);
+      return (
+        txDate >= parseLocalDate(monthStart) &&
+        txDate <= parseLocalDate(monthEnd)
+      );
     });
 
     // Sort by date
     const sorted = [...monthTransactions].sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      (a, b) =>
+        parseLocalDate(a.date).getTime() - parseLocalDate(b.date).getTime()
     );
 
     // Calculate cumulative profit by day
@@ -147,8 +158,11 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
   // Prepare bet distribution data
   const betDistribution = useMemo(() => {
     const monthTransactions = transactions.filter((t) => {
-      const txDate = new Date(t.date);
-      return txDate >= new Date(monthStart) && txDate <= new Date(monthEnd);
+      const txDate = parseLocalDate(t.date);
+      return (
+        txDate >= parseLocalDate(monthStart) &&
+        txDate <= parseLocalDate(monthEnd)
+      );
     });
 
     const bettingTx = monthTransactions.filter((t) =>
@@ -179,7 +193,10 @@ export const Dashboard = ({ transactions, onUpdate }: DashboardProps) => {
   const pendingBets = useMemo(() => {
     return transactions
       .filter((t) => t.type === TransactionType.BET_PENDING)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort(
+        (a, b) =>
+          parseLocalDate(b.date).getTime() - parseLocalDate(a.date).getTime()
+      );
   }, [transactions]);
 
   const handleEditSave = async (

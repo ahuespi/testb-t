@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from 'react';
 import { Transaction, TransactionType } from '../types';
-import { formatCurrency } from '../lib/utils';
+import { formatCurrency, parseLocalDate } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import {
   LineChart,
@@ -36,7 +36,7 @@ export const BalanceEvolution = ({ transactions }: BalanceEvolutionProps) => {
 
     // Filtrar transacciones del mes actual
     const monthTransactions = realTransactions.filter((t) => {
-      const date = new Date(t.date);
+      const date = parseLocalDate(t.date);
       return (
         date.getFullYear() === currentYear &&
         date.getMonth() + 1 === currentMonth
@@ -45,14 +45,14 @@ export const BalanceEvolution = ({ transactions }: BalanceEvolutionProps) => {
 
     // Ordenar por fecha
     monthTransactions.sort((a, b) => {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
+      const dateA = parseLocalDate(a.date).getTime();
+      const dateB = parseLocalDate(b.date).getTime();
       return dateA - dateB;
     });
 
     // Calcular balance inicial del mes (suma de todos los meses anteriores)
     const previousTransactions = realTransactions.filter((t) => {
-      const date = new Date(t.date);
+      const date = parseLocalDate(t.date);
       const txYear = date.getFullYear();
       const txMonth = date.getMonth() + 1;
       return txYear < currentYear || (txYear === currentYear && txMonth < currentMonth);
@@ -85,7 +85,7 @@ export const BalanceEvolution = ({ transactions }: BalanceEvolutionProps) => {
     // Agrupar transacciones por día
     const daysMap = new Map<string, Transaction[]>();
     monthTransactions.forEach((t) => {
-      const date = new Date(t.date);
+      const date = parseLocalDate(t.date);
       const dayKey = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`;
       if (!daysMap.has(dayKey)) {
         daysMap.set(dayKey, []);
@@ -227,14 +227,14 @@ export const BalanceEvolution = ({ transactions }: BalanceEvolutionProps) => {
 
     // Filtrar transacciones del año seleccionado
     const yearTransactions = realTransactions.filter((t) => {
-      const date = new Date(t.date);
+      const date = parseLocalDate(t.date);
       return date.getFullYear() === selectedYear;
     });
 
     // Agrupar por mes
     const monthsMap = new Map<number, Transaction[]>();
     yearTransactions.forEach((t) => {
-      const date = new Date(t.date);
+      const date = parseLocalDate(t.date);
       const month = date.getMonth() + 1; // 1-12
       if (!monthsMap.has(month)) {
         monthsMap.set(month, []);
@@ -244,7 +244,7 @@ export const BalanceEvolution = ({ transactions }: BalanceEvolutionProps) => {
 
     // Calcular balance inicial del año
     const previousYearTransactions = realTransactions.filter((t) => {
-      const date = new Date(t.date);
+      const date = parseLocalDate(t.date);
       return date.getFullYear() < selectedYear;
     });
 
@@ -310,7 +310,7 @@ export const BalanceEvolution = ({ transactions }: BalanceEvolutionProps) => {
   const availableYears = useMemo(() => {
     const years = new Set<number>();
     transactions.forEach((t) => {
-      const date = new Date(t.date);
+      const date = parseLocalDate(t.date);
       years.add(date.getFullYear());
     });
     return Array.from(years).sort((a, b) => b - a);

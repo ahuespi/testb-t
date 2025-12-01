@@ -1,6 +1,6 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { Transaction, TransactionType } from "../types";
-import { formatCurrency } from "../lib/utils";
+import { formatCurrency, parseLocalDate } from "../lib/utils";
 import { supabase } from "../lib/supabase";
 
 interface MonthlySummaryProps {
@@ -27,12 +27,54 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
 
-  // Calcular balance actual real (para el último mes)
+  // Estado para almacenar los balances iniciales configurados
+  const [monthlyInitialBalances, setMonthlyInitialBalances] = useState<
+    Map<string, number>
+  >(new Map());
+  const [balancesLoaded, setBalancesLoaded] = useState(false);
+
+  // Cargar balances iniciales configurados desde la base de datos
+  useEffect(() => {
+    const loadInitialBalances = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("monthly_config")
+          .select("year, month, initial_balance")
+          .not("initial_balance", "is", null);
+
+        if (error) throw error;
+
+        const balancesMap = new Map<string, number>();
+        if (data) {
+          data.forEach((config) => {
+            const key = `${config.year}-${String(config.month).padStart(
+              2,
+              "0"
+            )}`;
+            balancesMap.set(key, config.initial_balance);
+          });
+        }
+        setMonthlyInitialBalances(balancesMap);
+      } catch (err) {
+        console.error("Error loading initial balances:", err);
+      } finally {
+        setBalancesLoaded(true);
+      }
+    };
+
+    loadInitialBalances();
+  }, [transactions]); // Recargar cuando cambien las transacciones
+
+  // Calcular balance actual real (para el mes actual)
   const currentBalance = useMemo(() => {
-    // Filtrar transacciones históricas
-    const realTransactions = transactions.filter(
-      (t) => !t.notes?.toLowerCase().includes("históricos")
-    );
+    // Filtrar transacciones del mes actual
+    const currentMonthKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+    const realTransactions = transactions.filter((t) => {
+      if (t.notes?.toLowerCase().includes("históricos")) return false;
+      const date = parseLocalDate(t.date);
+      const txKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      return txKey === currentMonthKey;
+    });
 
     const deposits = realTransactions
       .filter((t) => t.type === TransactionType.DEPOSIT)
@@ -57,8 +99,11 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
       .filter((t) => t.type === TransactionType.BET_PENDING)
       .reduce((sum, t) => sum + t.amount, 0);
 
-    return deposits - withdrawals + resolvedNetProfit - pendingAmount;
-  }, [transactions]);
+    // Balance inicial configurado del mes actual
+    const configuredInitialBalance = monthlyInitialBalances.get(currentMonthKey) ?? 0;
+
+    return configuredInitialBalance + deposits - withdrawals + resolvedNetProfit - pendingAmount;
+  }, [transactions, currentYear, currentMonth, monthlyInitialBalances]);
 
   const monthlyData = useMemo(() => {
     // Filtrar transacciones históricas (las que tienen "históricos" en las notas)
@@ -71,7 +116,7 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
     const monthsMap = new Map<string, Transaction[]>();
 
     realTransactions.forEach((t) => {
-      const date = new Date(t.date);
+      const date = parseLocalDate(t.date);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
         2,
         "0"
@@ -82,20 +127,50 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
       monthsMap.get(key)!.push(t);
     });
 
-    // Ordenar por fecha (más reciente primero)
+    // Asegurar que el mes actual esté incluido aunque no tenga transacciones
+    const currentMonthKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+    if (!monthsMap.has(currentMonthKey)) {
+      monthsMap.set(currentMonthKey, []);
+    }
+
+    // También incluir meses que tienen balance inicial configurado pero sin transacciones
+    monthlyInitialBalances.forEach((_, key) => {
+      if (!monthsMap.has(key)) {
+        monthsMap.set(key, []);
+      }
+    });
+
+    // Ordenar por fecha (más antiguo primero para calcular balances correctamente)
     const sortedKeys = Array.from(monthsMap.keys()).sort((a, b) =>
-      b.localeCompare(a)
+      a.localeCompare(b)
     );
 
     // Calcular datos por mes
     const data: MonthData[] = [];
     let runningBalance = 0;
 
+    const monthNames = [
+      "Enero",
+      "Febrero",
+      "Marzo",
+      "Abril",
+      "Mayo",
+      "Junio",
+      "Julio",
+      "Agosto",
+      "Septiembre",
+      "Octubre",
+      "Noviembre",
+      "Diciembre",
+    ];
+
     // Procesar desde el más antiguo al más reciente para calcular balances
     for (let i = 0; i < sortedKeys.length; i++) {
       const key = sortedKeys[i];
       const [year, month] = key.split("-");
       const monthTransactions = monthsMap.get(key)!;
+      const isCurrentMonth =
+        parseInt(year) === currentYear && parseInt(month) === currentMonth;
 
       const deposits = monthTransactions
         .filter((t) => t.type === TransactionType.DEPOSIT)
@@ -153,34 +228,26 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
 
       const roi = totalBet > 0 ? (resolvedNetProfit / totalBet) * 100 : 0;
 
-      const initialBalance = runningBalance;
+      // Usar balance inicial configurado si existe, sino usar el running balance
+      const configuredInitialBalance = monthlyInitialBalances.get(key);
+      const initialBalance =
+        configuredInitialBalance !== undefined
+          ? configuredInitialBalance
+          : runningBalance;
+
       // Balance final = balance inicial + depósitos - retiros + ganancia neta (que ya incluye pendientes)
-      const finalBalance = runningBalance + deposits - withdrawals + netProfit;
-      
+      const finalBalance =
+        initialBalance + deposits - withdrawals + netProfit;
+
       // Actualizar runningBalance para el próximo mes
       runningBalance = finalBalance;
 
-      const monthNames = [
-        "Enero",
-        "Febrero",
-        "Marzo",
-        "Abril",
-        "Mayo",
-        "Junio",
-        "Julio",
-        "Agosto",
-        "Septiembre",
-        "Octubre",
-        "Noviembre",
-        "Diciembre",
-      ];
-
-      data.unshift({
+      data.push({
         month: key,
         year: parseInt(year),
         monthName: monthNames[parseInt(month) - 1],
         initialBalance,
-        finalBalance: i === 0 ? currentBalance : finalBalance, // El último mes usa el balance actual real
+        finalBalance: isCurrentMonth ? currentBalance : finalBalance,
         deposits,
         withdrawals,
         netProfit,
@@ -191,8 +258,9 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
       });
     }
 
-    return data;
-  }, [transactions, currentBalance]);
+    // Invertir para mostrar más reciente primero
+    return data.reverse();
+  }, [transactions, currentBalance, monthlyInitialBalances, currentYear, currentMonth, balancesLoaded]);
 
   // Guardar balance final de cada mes en la base de datos
   useEffect(() => {
@@ -204,46 +272,45 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
         const [yearStr, monthStr] = monthData.month.split("-");
         const year = parseInt(yearStr);
         const month = parseInt(monthStr);
-        
+
         // Solo guardar si el mes ya terminó (no el mes actual)
         const lastDayOfMonth = new Date(year, month, 0);
         const today = new Date();
-        
+
         // Si el mes ya terminó, guardar su balance final
         if (lastDayOfMonth < today) {
           try {
-            await supabase
-              .from('monthly_config')
-              .upsert(
-                {
-                  year: year,
-                  month: month,
-                  final_balance: monthData.finalBalance,
-                  updated_at: new Date().toISOString(),
-                },
-                {
-                  onConflict: 'year,month',
-                }
-              );
+            await supabase.from("monthly_config").upsert(
+              {
+                year: year,
+                month: month,
+                final_balance: monthData.finalBalance,
+                updated_at: new Date().toISOString(),
+              },
+              {
+                onConflict: "year,month",
+              }
+            );
           } catch (err) {
-            console.error(`Error saving final balance for ${year}-${month}:`, err);
+            console.error(
+              `Error saving final balance for ${year}-${month}:`,
+              err
+            );
           }
         } else if (year === currentYear && month === currentMonth) {
           // Para el mes actual, también guardar el balance (se actualizará constantemente)
           try {
-            await supabase
-              .from('monthly_config')
-              .upsert(
-                {
-                  year: year,
-                  month: month,
-                  final_balance: monthData.finalBalance,
-                  updated_at: new Date().toISOString(),
-                },
-                {
-                  onConflict: 'year,month',
-                }
-              );
+            await supabase.from("monthly_config").upsert(
+              {
+                year: year,
+                month: month,
+                final_balance: monthData.finalBalance,
+                updated_at: new Date().toISOString(),
+              },
+              {
+                onConflict: "year,month",
+              }
+            );
           } catch (err) {
             console.error(`Error saving final balance for current month:`, err);
           }
@@ -265,6 +332,19 @@ export const MonthlySummary = ({ transactions }: MonthlySummaryProps) => {
     });
     return Array.from(years.entries()).sort((a, b) => b[0] - a[0]);
   }, [monthlyData]);
+
+  if (!balancesLoaded) {
+    return (
+      <div className="space-y-6">
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Resumen Mensual
+          </h1>
+          <p className="text-gray-600">Cargando datos...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

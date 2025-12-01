@@ -170,146 +170,171 @@ function App() {
         </div>
       </nav>
 
-      {/* Navigation - Mobile: Bottom tab bar con iconos */}
+      {/* Navigation - Mobile: Bottom tab bar con scroll horizontal */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 safe-area-bottom">
-        <div className="grid grid-cols-6 h-16">
-          <button
-            onClick={() => setCurrentView("dashboard")}
-            className={`flex flex-col items-center justify-center space-y-1 ${
-              currentView === "dashboard" ? "text-primary-600" : "text-gray-500"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+        <div className="overflow-x-auto scrollbar-hide py-1">
+          <div className="flex h-16 min-w-max">
+            <button
+              onClick={() => setCurrentView("dashboard")}
+              className={`flex flex-col items-center justify-center space-y-1 px-4 min-w-[70px] flex-shrink-0 ${
+                currentView === "dashboard" ? "text-primary-600" : "text-gray-500"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-              />
-            </svg>
-            <span className="text-xs font-medium">Inicio</span>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                />
+              </svg>
+              <span className="text-xs font-medium">Inicio</span>
+            </button>
 
-          <button
-            onClick={() => setCurrentView("add")}
-            className={`flex flex-col items-center justify-center space-y-1 ${
-              currentView === "add" ? "text-primary-600" : "text-gray-500"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <button
+              onClick={() => setCurrentView("add")}
+              className={`flex flex-col items-center justify-center space-y-1 px-4 min-w-[70px] flex-shrink-0 ${
+                currentView === "add" ? "text-primary-600" : "text-gray-500"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            <span className="text-xs font-medium">Nueva</span>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              <span className="text-xs font-medium">Nueva</span>
+            </button>
 
-          <button
-            onClick={() => setCurrentView("history")}
-            className={`flex flex-col items-center justify-center space-y-1 ${
-              currentView === "history" ? "text-primary-600" : "text-gray-500"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <button
+              onClick={() => setCurrentView("history")}
+              className={`flex flex-col items-center justify-center space-y-1 px-4 min-w-[70px] flex-shrink-0 ${
+                currentView === "history" ? "text-primary-600" : "text-gray-500"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-xs font-medium">Historial</span>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-xs font-medium">Historial</span>
+            </button>
 
-          <button
-            onClick={() => setCurrentView("traders")}
-            className={`flex flex-col items-center justify-center space-y-1 ${
-              currentView === "traders" ? "text-primary-600" : "text-gray-500"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <button
+              onClick={() => setCurrentView("traders")}
+              className={`flex flex-col items-center justify-center space-y-1 px-4 min-w-[70px] flex-shrink-0 ${
+                currentView === "traders" ? "text-primary-600" : "text-gray-500"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-            <span className="text-xs font-medium">Traders</span>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              <span className="text-xs font-medium">Traders</span>
+            </button>
 
-          <button
-            onClick={() => setCurrentView("monthly")}
-            className={`flex flex-col items-center justify-center space-y-1 ${
-              currentView === "monthly" ? "text-primary-600" : "text-gray-500"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <button
+              onClick={() => setCurrentView("monthly")}
+              className={`flex flex-col items-center justify-center space-y-1 px-4 min-w-[70px] flex-shrink-0 ${
+                currentView === "monthly" ? "text-primary-600" : "text-gray-500"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-              />
-            </svg>
-            <span className="text-xs font-medium">Mensual</span>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                />
+              </svg>
+              <span className="text-xs font-medium">Mensual</span>
+            </button>
 
-          <button
-            onClick={() => setCurrentView("goals")}
-            className={`flex flex-col items-center justify-center space-y-1 ${
-              currentView === "goals" ? "text-primary-600" : "text-gray-500"
-            }`}
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+            <button
+              onClick={() => setCurrentView("goals")}
+              className={`flex flex-col items-center justify-center space-y-1 px-4 min-w-[70px] flex-shrink-0 ${
+                currentView === "goals" ? "text-primary-600" : "text-gray-500"
+              }`}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="text-xs font-medium">Objetivos</span>
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-xs font-medium">Objetivos</span>
+            </button>
+
+            <button
+              onClick={() => setCurrentView("evolution")}
+              className={`flex flex-col items-center justify-center space-y-1 px-4 min-w-[70px] flex-shrink-0 ${
+                currentView === "evolution" ? "text-primary-600" : "text-gray-500"
+              }`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+                />
+              </svg>
+              <span className="text-xs font-medium">Evolución</span>
+            </button>
+          </div>
         </div>
       </nav>
 

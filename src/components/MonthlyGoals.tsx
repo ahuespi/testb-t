@@ -236,39 +236,38 @@ export const MonthlyGoals = ({ year, month }: MonthlyGoalsProps) => {
             {history.length === 0 ? (
               <p className="text-gray-500 text-center py-8">No hay objetivos completados en el historial.</p>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-1">
                 {history.map((goal) => {
                   const goalType = goal.goal_type as GoalType;
                   return (
                     <div
                       key={goal.id}
-                      className={`border-2 rounded-lg p-4 ${getGoalColor(goalType)} opacity-75`}
+                      className={`flex items-center gap-3 p-2 rounded border-l-4 ${getGoalColor(goalType)} opacity-75 text-xs`}
                     >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-semibold text-lg line-through">
-                            {GOAL_LABELS[goalType]}
-                          </h3>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {monthNames[goal.month - 1]} {goal.year} - Objetivo: {formatCurrency(goal.target_amount)}
-                        </p>
-                        {goal.completed_at && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Completado el: {new Date(goal.completed_at).toLocaleDateString('es-AR', {
-                              day: '2-digit',
-                              month: '2-digit',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </p>
-                        )}
-                        {goal.notes && (
-                          <p className="text-sm text-gray-600 italic mt-2">{goal.notes}</p>
-                        )}
-                      </div>
+                      <span className="font-semibold line-through w-24">
+                        {GOAL_LABELS[goalType]}
+                      </span>
+                      <span className="text-gray-600 w-20">
+                        {monthNames[goal.month - 1]} {goal.year}
+                      </span>
+                      <span className="text-gray-700 font-medium w-24">
+                        {formatCurrency(goal.target_amount)}
+                      </span>
+                      {goal.completed_at && (
+                        <span className="text-gray-500 w-20">
+                          {new Date(goal.completed_at).toLocaleDateString('es-AR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                          })}
+                        </span>
+                      )}
+                      {goal.notes && (
+                        <span className="text-gray-500 italic truncate flex-1 min-w-0">
+                          {goal.notes}
+                        </span>
+                      )}
                     </div>
-                  </div>
                   );
                 })}
               </div>

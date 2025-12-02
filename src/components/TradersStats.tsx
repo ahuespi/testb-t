@@ -1,12 +1,49 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Transaction, BetOwner, TransactionType } from "../types";
-import { formatCurrency } from "../lib/utils";
+import { formatCurrency, parseLocalDate } from "../lib/utils";
 
 interface TradersStatsProps {
   transactions: Transaction[];
 }
 
+const MONTH_NAMES = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+];
+
 export const TradersStats = ({ transactions }: TradersStatsProps) => {
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+
+  const availableYears = useMemo(() => {
+    const years = new Set<number>();
+    transactions.forEach((tx) => {
+      years.add(parseLocalDate(tx.date).getFullYear());
+    });
+    years.add(selectedYear);
+    return Array.from(years).sort((a, b) => b - a);
+  }, [transactions, selectedYear]);
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((tx) => {
+      const txDate = parseLocalDate(tx.date);
+      return (
+        txDate.getFullYear() === selectedYear &&
+        txDate.getMonth() + 1 === selectedMonth
+      );
+    });
+  }, [transactions, selectedYear, selectedMonth]);
+
   const statsByOwner = useMemo(() => {
     const stats = {
       [BetOwner.PROPIA]: {
@@ -47,7 +84,7 @@ export const TradersStats = ({ transactions }: TradersStatsProps) => {
       },
     };
 
-    transactions.forEach((tx) => {
+    filteredTransactions.forEach((tx) => {
       if (!tx.owner) return; // Skip transactions without owner
 
       const ownerStats = stats[tx.owner];
@@ -105,7 +142,7 @@ export const TradersStats = ({ transactions }: TradersStatsProps) => {
     });
 
     return stats;
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   const getOwnerLabel = (owner: BetOwner) => {
     const labels = {
@@ -127,13 +164,64 @@ export const TradersStats = ({ transactions }: TradersStatsProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Estadísticas por Trader
-        </h1>
-        <p className="text-gray-600">
-          Desempeño individual de cada estrategia de apuestas
-        </p>
+      <div className="bg-white rounded-lg shadow-md p-6 space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+            Estadísticas por Trader
+          </h1>
+          <p className="text-gray-600">
+            Desempeño individual de cada estrategia de apuestas
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mes
+            </label>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              {MONTH_NAMES.map((name, index) => (
+                <option key={name} value={index + 1}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Año
+            </label>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+            <p className="font-medium text-gray-900">Mostrando</p>
+            <p>
+              {MONTH_NAMES[selectedMonth - 1]} {selectedYear}
+            </p>
+            <p>{filteredTransactions.length} transacciones</p>
+          </div>
+        </div>
+
+        {filteredTransactions.length === 0 && (
+          <div className="rounded-md border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+            No hay registros para {MONTH_NAMES[selectedMonth - 1]} {selectedYear}
+            . Los valores se mantienen en cero para facilitar la comparación.
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
